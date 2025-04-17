@@ -64,20 +64,69 @@ async def register_form(
         return templates.TemplateResponse("register.html", context)
 
 
+# 登录页面渲染
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    # 检查用户是否已登录
+    user = get_current_user(request)
+    if user:
+        # 已登录用户重定向到聊天页面
+        return RedirectResponse(url="/auth/chatbot?registerSuccess=true", status_code=303)
 
-#
-# @router.post("/register", response_model=UserOut)
-# async def register(user_data: UserCreate,service: UserService = Depends()):
-#     """
-#     用户注册接口
-#     - **username**: 3-32位字母数字
-#     - **email**: 有效邮箱格式
-#     - **password**: 至少6位，含字母和数字
-#     """
-#     try:
-#         return await service.create_user(user_data)
-#     except ValueError as e:
-#         raise HTTPException(400, detail=str(e))
+    # 检查URL参数
+    register_success = request.query_params.get("registerSuccess") == "true"
+    error = request.query_params.get("error")
+
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "register_success": register_success,
+            "error": error
+        }
+    )
+
+
+# 处理登录表单提交
+@router.post("/login")
+async def login_form(
+        request: Request,
+        username: str = Form(...),
+        password: str = Form(...),
+        service: UserService = Depends()
+):
+    # 准备上下文，包含用户名以便回显
+    context = {
+        "request": request,
+        "username": username
+    }
+
+    try:
+        # 验证用户
+        user_data = await service.verify_user(username, password)
+
+        # 创建响应重定向到聊天页面
+        response = RedirectResponse(url="/auth/chatbot?registerSuccess=true", status_code=303)
+
+        # 设置认证cookie
+        set_cookie(response, user_data)
+
+        return response
+
+    except ValueError as e:
+        # 显示登录错误
+        context["error"] = str(e)
+        return templates.TemplateResponse("login.html", context)
+    except Exception as e:
+        # 处理其他未预期的错误
+        context["error"] = f"登录过程中发生错误: {str(e)}"
+        return templates.TemplateResponse("login.html", context)
+
+
+# 登出
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/auth/login", status_code=303)
+    # 清除认证cookie
+    response.delete_cookie(key="access_token")
+    return response

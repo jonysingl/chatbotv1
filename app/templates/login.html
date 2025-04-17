@@ -108,6 +108,13 @@
             box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
         }
 
+        .error-message {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
         .alert {
             padding: 10px;
             margin: 0 30px 20px;
@@ -172,23 +179,33 @@
         <p>登录您的智能聊天助手账户</p>
     </div>
 
-    <!-- 错误提示 - 默认隐藏，可通过URL参数显示 -->
+    <!-- 错误提示区域 -->
+    {% if error %}
+    <div id="errorAlert" class="alert alert-error">{{ error }}</div>
+    {% else %}
     <div id="errorAlert" class="alert alert-error" style="display: none;"></div>
+    {% endif %}
 
-    <!-- 成功提示 - 默认隐藏，可通过URL参数显示 -->
+    <!-- 成功提示区域 -->
+    {% if register_success %}
+    <div id="successAlert" class="alert alert-success">注册成功！请登录您的账户。</div>
+    {% else %}
     <div id="successAlert" class="alert alert-success" style="display: none;">
         注册成功！请登录您的账户。
     </div>
+    {% endif %}
 
     <div class="login-form">
-        <form action="/auth/login" method="post">
+        <form action="/auth/login" method="post" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" value="{{ username|default('') }}" required>
+                <span class="error-message" id="username-error"></span>
             </div>
             <div class="form-group">
                 <label for="password">密码</label>
                 <input type="password" id="password" name="password" required>
+                <span class="error-message" id="password-error"></span>
             </div>
             <button type="submit" class="btn-login">登录</button>
         </form>
@@ -199,20 +216,50 @@
 </div>
 
 <script>
+    // 表单验证函数
+    function validateForm() {
+        let isValid = true;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // 清除之前的错误提示
+        document.getElementById('errorAlert').style.display = 'none';
+
+        // 验证用户名
+        if(username.length < 1) {
+            document.getElementById('username-error').textContent = '请输入用户名';
+            document.getElementById('username-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('username-error').style.display = 'none';
+        }
+
+        // 验证密码
+        if(password.length < 1) {
+            document.getElementById('password-error').textContent = '请输入密码';
+            document.getElementById('password-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('password-error').style.display = 'none';
+        }
+
+        return isValid;
+    }
+
     // 页面加载时检查URL参数
     window.onload = function() {
         const urlParams = new URLSearchParams(window.location.search);
         const error = urlParams.get('error');
         const registerSuccess = urlParams.get('registerSuccess');
 
-        // 显示错误消息
+        // 显示错误消息（如果不是从服务器渲染的）
         if (error) {
             const errorAlert = document.getElementById('errorAlert');
             errorAlert.style.display = 'block';
             errorAlert.textContent = decodeURIComponent(error);
         }
 
-        // 显示成功消息
+        // 显示成功消息（如果不是从服务器渲染的）
         if (registerSuccess === 'true') {
             document.getElementById('successAlert').style.display = 'block';
         }
