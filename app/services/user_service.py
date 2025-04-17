@@ -25,6 +25,8 @@ class UserService:
         # 检查邮箱是否已注册
         if await Users.exists(email=user_data.email):
             raise ValueError("该邮箱已经被注册！")
+        if await Users.exists(username=user_data.username):
+            raise ValueError("该用户名已被注册！")
 
         # 准备用户数据，排除confirm_password
         user_data_dict = user_data.model_dump(exclude={"confirm_password"})

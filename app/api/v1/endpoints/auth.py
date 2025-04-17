@@ -6,7 +6,7 @@ from app.models.schemas.user import UserCreate
 
 
 router = APIRouter()
-templates = Jinja2Templates(directory="E:/chatbot/chatbot/app/templates")
+templates = Jinja2Templates(directory=r"E:\chatbotv1\app\templates")
 
 
 # 渲染注册页面
@@ -33,6 +33,14 @@ async def register_form(
             confirm_password=confirm_password
         )
         service = UserService()
+
+        # 检查用户名是否已存在
+        if await Users.exists(username=username):
+            return templates.TemplateResponse(
+                "register.html",
+                {"request": request, "error": "该用户名已被注册，请使用其他用户名"}
+            )
+
         await service.create_user(user_data)
 
         # 重定向到登录页面
@@ -41,7 +49,7 @@ async def register_form(
             status_code=303
         )
     except ValueError as e:
-        # 显示错误
+        # 显示错误 - 这里包含了 UserService 中抛出的邮箱已注册错误
         return templates.TemplateResponse(
             "register.html",
             {"request": request, "error": str(e)}
