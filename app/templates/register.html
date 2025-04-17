@@ -179,8 +179,12 @@
         <p>加入智能聊天助手，开始您的智能对话之旅</p>
     </div>
 
-    <!-- 错误提示 - 默认隐藏，可通过JavaScript显示 -->
+    <!-- 错误提示区域 -->
+    {% if error %}
+    <div id="errorAlert" class="alert alert-error">{{ error }}</div>
+    {% else %}
     <div id="errorAlert" class="alert alert-error" style="display: none;"></div>
+    {% endif %}
 
     <!-- 成功提示 - 默认隐藏，可通过URL参数显示 -->
     <div id="successAlert" class="alert alert-success" style="display: none;">
@@ -191,12 +195,12 @@
         <form action="/auth/register" method="post" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" value="{{ username|default('') }}" required>
                 <span class="error-message" id="username-error"></span>
             </div>
             <div class="form-group">
                 <label for="email">电子邮箱</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" value="{{ email|default('') }}" required>
                 <span class="error-message" id="email-error"></span>
             </div>
             <div class="form-group">
@@ -224,7 +228,7 @@
         const error = urlParams.get('error');
         const registerSuccess = urlParams.get('registerSuccess');
 
-        // 显示错误消息
+        // 显示错误消息 - 从URL参数获取
         if (error) {
             const errorAlert = document.getElementById('errorAlert');
             errorAlert.style.display = 'block';
@@ -244,6 +248,9 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
+
+        // 清除之前的错误提示
+        document.getElementById('errorAlert').style.display = 'none';
 
         // 验证用户名
         if(username.length < 3) {

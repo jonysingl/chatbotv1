@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from app.services.user_service import UserService
 from app.models.schemas.user import UserCreate
-
+from app.models.orm.user import  Users  # 确保导入Users模型
 
 router = APIRouter()
 templates = Jinja2Templates(directory=r"E:\chatbotv1\app\templates")
@@ -24,6 +24,13 @@ async def register_form(
         password: str = Form(...),
         confirm_password: str = Form(..., alias="confirm-password")
 ):
+    # 准备上下文，包含用户输入的值以便回显
+    context = {
+        "request": request,
+        "username": username,
+        "email": email
+    }
+
     try:
         # 创建用户
         user_data = UserCreate(
@@ -36,11 +43,10 @@ async def register_form(
 
         # 检查用户名是否已存在
         if await Users.exists(username=username):
-            return templates.TemplateResponse(
-                "register.html",
-                {"request": request, "error": "该用户名已被注册，请使用其他用户名"}
-            )
+            context["error"] = "该用户名已被注册，请使用其他用户名"
+            return templates.TemplateResponse("register.html", context)
 
+        # 检查邮箱是否已存在 (假设这个检查在service中)
         await service.create_user(user_data)
 
         # 重定向到登录页面
@@ -49,11 +55,14 @@ async def register_form(
             status_code=303
         )
     except ValueError as e:
-        # 显示错误 - 这里包含了 UserService 中抛出的邮箱已注册错误
-        return templates.TemplateResponse(
-            "register.html",
-            {"request": request, "error": str(e)}
-        )
+        # 显示具体错误信息
+        context["error"] = str(e)
+        return templates.TemplateResponse("register.html", context)
+    except Exception as e:
+        # 处理其他未预期的错误
+        context["error"] = f"注册过程中发生错误: {str(e)}"
+        return templates.TemplateResponse("register.html", context)
+
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
