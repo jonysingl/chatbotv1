@@ -17,7 +17,7 @@ TORTOISE_ORM = {
     },
     "apps": {
         "models": {
-            "models": ["app.models.orm.user", "aerich.models"],
+            "models": ["app.models.orm.user", "app.models.orm.chat", "aerich.models"],
             "default_connection": "default"
         }
     },
