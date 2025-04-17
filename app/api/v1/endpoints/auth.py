@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse,Response
 from fastapi.templating import Jinja2Templates
 from app.services.user_service import UserService
 from app.models.schemas.user import UserCreate, UserLogin
@@ -105,12 +105,18 @@ async def login_form(
         response.set_cookie(
             key="user_id",
             value=str(user_data["id"]),
-            httponly=True
+            httponly=True,  # 防止前端 JS 访问
+            secure=True,  # 仅在 HTTPS 下传输
+            max_age=3600,  # Cookie 有效期（秒）
+            samesite="Lax"  # 防止 CSRF 攻击
         )
         response.set_cookie(
             key="username",
             value=user_data["username"],
-            httponly=True
+            httponly=True,
+            secure=True,
+            max_age=3600,
+            samesite="Lax"
         )
 
         return response
@@ -129,6 +135,36 @@ async def login_form(
         # 处理其他未预期的错误
         context["error"] = f"登录过程中发生错误: {str(e)}"
         return templates.TemplateResponse("login.html", context)
+
+
+# cookie续期
+@router.get("/renew-cookie")
+def renew_cookie(request: Request, response: Response):
+    # 获取现有的 Cookie 值（如果需要）
+    user_id = request.cookies.get("user_id")
+    username = request.cookies.get("username")
+
+    # 如果用户已登录，则延长 Cookie 有效期
+    if user_id and username:
+        response.set_cookie(
+            key="user_id",
+            value=user_id,
+            max_age=30 * 24 * 60 * 60,  # 延长有效期 30 天
+            httponly=True,
+            secure=True,
+            samesite="Lax"
+        )
+        response.set_cookie(
+            key="username",
+            value=username,
+            max_age=30 * 24 * 60 * 60,  # 延长有效期 30 天
+            httponly=True,
+            secure=True,
+            samesite="Lax"
+        )
+        return {"message": "Cookie 已续期"}
+    else:
+        return {"message": "未发现登录信息，Cookie 未续期"}
 
 
 # 登出

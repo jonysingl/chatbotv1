@@ -537,3 +537,28 @@ body {
 .notification.error {
     background-color: #d9534f;
 }
+/* 添加到现有CSS中 */
+.system-message {
+    text-align: center;
+    padding: 8px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.system-message.error {
+    color: #e74c3c;
+    background-color: #fdecea;
+}
+
+.system-message.info {
+    color: #3498db;
+    background-color: #ebf5fb;
+}
+
+/* 禁用状态样式 */
+.chat-input input:disabled,
+.chat-input button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

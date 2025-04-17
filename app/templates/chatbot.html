@@ -320,6 +320,32 @@
             background-color: #2ecc71;
         }
 
+        /* 系统消息样式 */
+        .system-message {
+            text-align: center;
+            padding: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .system-message.error {
+            color: #e74c3c;
+            background-color: #fdecea;
+        }
+
+        .system-message.info {
+            color: #3498db;
+            background-color: #ebf5fb;
+        }
+
+        /* 禁用状态样式 */
+        .chat-input input:disabled,
+        .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         /* 任务列表样式 */
         .daily-tasks {
             position: fixed;
@@ -401,6 +427,7 @@
     <div class="user-area" id="userArea">
         {% if username %}
         <div class="user-btn">
+            <span class="user-id">ID: {{ user_id }}</span> <!-- 显示用户ID -->
             <i class="fas fa-user-circle"></i>
             {{ username }}
         </div>
@@ -440,6 +467,7 @@
             <div class="chat-header">
                 <h1>智能聊天助手</h1>
                 <p>随时为您解答问题</p>
+                <p class="conversation-id">对话 ID: {{ conversation_id }}</p> <!-- 显示对话ID -->
             </div>
 
             <!-- 聊天输出区域 -->
@@ -509,136 +537,11 @@
             </div>
         </div>
     </div>
-
-<!--    &lt;!&ndash; 用户ID信息徽章（仅当登录时显示） &ndash;&gt;-->
-<!--    {% if user_id %}-->
-<!--    <div class="user-info-badge">-->
-<!--        用户ID: {{ user_id }}-->
-<!--    </div>-->
-<!--    {% endif %}-->
 </div>
 
 <script>
-    // 聊天功能
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatInput = document.getElementById('chatInput');
-        const sendButton = document.getElementById('sendButton');
-        const chatOutput = document.getElementById('chatOutput');
-        const typingIndicator = document.getElementById('typingIndicator');
 
-        // 发送消息函数
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message) {
-                // 添加用户消息
-                const userMessageDiv = document.createElement('div');
-                userMessageDiv.className = 'user-message';
-                userMessageDiv.innerHTML = `
-                    <div class="message-content">${message}</div>
-                    <div class="avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                `;
-                chatOutput.appendChild(userMessageDiv);
-
-                // 清空输入框
-                chatInput.value = '';
-
-                // 滚动到底部
-                chatOutput.scrollTop = chatOutput.scrollHeight;
-
-                // 显示打字指示器
-                typingIndicator.style.display = 'flex';
-
-                // 模拟AI回复
-                setTimeout(() => {
-                    // 隐藏打字指示器
-                    typingIndicator.style.display = 'none';
-
-                    // 添加机器人回复
-                    const botMessageDiv = document.createElement('div');
-                    botMessageDiv.className = 'bot-message';
-                    botMessageDiv.innerHTML = `
-                        <div class="avatar">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="message-content">
-                            我收到了您的消息："${message}"。目前这是一个演示界面，还不支持真实的AI对话功能。
-                        </div>
-                    `;
-                    chatOutput.appendChild(botMessageDiv);
-
-                    // 滚动到底部
-                    chatOutput.scrollTop = chatOutput.scrollHeight;
-                }, 1500);
-            }
-        }
-
-        // 点击发送按钮或按Enter键发送消息
-        sendButton.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // 任务项目点击事件
-        const taskItems = document.querySelectorAll('.task-item');
-        taskItems.forEach(item => {
-            const checkbox = item.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    item.classList.add('completed');
-                } else {
-                    item.classList.remove('completed');
-                }
-            });
-        });
-
-        // 添加任务按钮（示例）
-        document.getElementById('addTaskButton').addEventListener('click', function() {
-            const taskList = document.getElementById('taskList');
-            const taskId = 'task' + (taskList.children.length + 1);
-
-            const taskItem = document.createElement('div');
-            taskItem.className = 'task-item';
-            taskItem.innerHTML = `
-                <input type="checkbox" id="${taskId}">
-                <label for="${taskId}">新任务</label>
-            `;
-
-            taskList.appendChild(taskItem);
-
-            // 为新添加的任务添加事件监听
-            const checkbox = taskItem.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    taskItem.classList.add('completed');
-                } else {
-                    taskItem.classList.remove('completed');
-                }
-            });
-        });
-
-        // 开启新对话
-        document.getElementById('newConversationButton').addEventListener('click', function() {
-            // 清空聊天记录
-            chatOutput.innerHTML = `
-                <div class="bot-message">
-                    <div class="avatar">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="message-content">
-                        {% if username %}
-                        您好，{{ username }}！我是智能聊天助手，请问有什么可以帮您的吗？
-                        {% else %}
-                        您好！我是智能聊天助手，请问有什么可以帮您的吗？
-                        {% endif %}
-                    </div>
-                </div>
-            `;
-        });
-    });
 </script>
+
 </body>
 </html>
