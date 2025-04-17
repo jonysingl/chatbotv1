@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 智能聊天助手</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --primary-light: #7798c8;
+            --accent-color: #5e97f6;
+            --background-color: #f9fafc;
+            --text-color: #333;
+            --light-text: #f9f9f9;
+            --border-radius: 12px;
+            --error-color: #e53935;
+            --success-color: #43a047;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .login-container {
+            width: 360px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .login-header p {
+            margin-top: 5px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .login-header .logo {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 15px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .login-form {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+        }
+
+        .alert {
+            padding: 10px;
+            margin: 0 30px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .btn-login {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-login:hover {
+            background-color: var(--accent-color);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <!-- 引入Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-header">
+        <div class="logo">
+            <i class="fas fa-robot" style="font-size: 30px; color: var(--primary-color);"></i>
+        </div>
+        <h1>欢迎回来</h1>
+        <p>登录您的智能聊天助手账户</p>
+    </div>
+
+    <!-- 错误提示 - 默认隐藏，可通过URL参数显示 -->
+    <div id="errorAlert" class="alert alert-error" style="display: none;"></div>
+
+    <!-- 成功提示 - 默认隐藏，可通过URL参数显示 -->
+    <div id="successAlert" class="alert alert-success" style="display: none;">
+        注册成功！请登录您的账户。
+    </div>
+
+    <div class="login-form">
+        <form action="/login" method="post">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-login">登录</button>
+        </form>
+        <div class="register-link">
+            没有账户？<a href="/register">立即注册</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 页面加载时检查URL参数
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        const registerSuccess = urlParams.get('registerSuccess');
+
+        // 显示错误消息
+        if (error) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.style.display = 'block';
+            errorAlert.textContent = decodeURIComponent(error);
+        }
+
+        // 显示成功消息
+        if (registerSuccess === 'true') {
+            document.getElementById('successAlert').style.display = 'block';
+        }
+    };
+</script>
+</body>
+</html>

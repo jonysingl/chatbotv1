@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能聊天助手</title>
+    <!-- 添加Font Awesome图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- 引用外部CSS文件 -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/chatbot.css') }}">
+    <style>
+        /* 基础样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 用户区域样式 */
+        .user-area {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .login-btn:hover {
+            background-color: #5e97f6;
+        }
+
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #4a6fa5;
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+
+        #newConversationButton {
+            width: 100%;
+            padding: 10px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #newConversationButton:hover {
+            background-color: #5e97f6;
+        }
+
+        .history-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .conversation-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #34495e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .conversation-item:hover {
+            background-color: #3d566d;
+        }
+
+        .conversation-item.active {
+            background-color: #4a6fa5;
+        }
+
+        .conv-title {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .conv-date {
+            font-size: 12px;
+            color: #bdc3c7;
+        }
+
+        .no-history, .please-login, .error-message {
+            font-size: 14px;
+            color: #bdc3c7;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* 主内容区域 */
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            padding-top: 70px;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background-color: #4a6fa5;
+            color: white;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .chat-output {
+            height: 500px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .user-message, .bot-message {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+        }
+
+        .user-message .message-content {
+            background-color: #4a6fa5;
+            color: white;
+            border-top-right-radius: 0;
+        }
+
+        .bot-message .message-content {
+            background-color: #ecf0f1;
+            color: #333;
+            border-top-left-radius: 0;
+        }
+
+        .typing-indicator {
+            display: flex;
+            padding: 10px 20px;
+            margin-bottom: 10px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: #7f8c8d;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .chat-input button:hover {
+            background-color: #5e97f6;
+        }
+
+        .study-plan-container {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .study-plan-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: #27ae60;
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .study-plan-btn:hover {
+            background-color: #2ecc71;
+        }
+
+        /* 任务列表样式 */
+        .daily-tasks {
+            position: fixed;
+            right: 20px;
+            top: 70px;
+            width: 250px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .tasks-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .add-task-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-task-btn:hover {
+            background-color: #5e97f6;
+        }
+
+        .task-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .task-item.completed {
+            color: #95a5a6;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 用户区域 - 登录/登出 -->
+    <div class="user-area" id="userArea">
+        {% if username %}
+        <div class="user-btn">
+            <i class="fas fa-user-circle"></i>
+            {{ username }}
+        </div>
+        <a href="/logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            退出
+        </a>
+        {% else %}
+        <a href="/login" class="login-btn" id="loginButton">
+            <i class="fas fa-sign-in-alt"></i>
+            登录
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- 左侧边栏 -->
+    <div class="sidebar" id="sidebar">
+        <button id="newConversationButton">开启新对话</button>
+        <div id="conversationHistory">
+            <div class="history-title">对话历史</div>
+            {% if username %}
+            <div class="conversation-item active">
+                <div class="conv-title">最近对话</div>
+                <div class="conv-date">{{ current_time }}</div>
+            </div>
+            {% else %}
+            <p class="please-login">请登录以查看历史记录</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 聊天主区域 -->
+    <div class="content" id="main">
+        <!-- 聊天区域容器 -->
+        <div class="chat-container">
+            <!-- 聊天头部 -->
+            <div class="chat-header">
+                <h1>智能聊天助手</h1>
+                <p>随时为您解答问题</p>
+            </div>
+
+            <!-- 聊天输出区域 -->
+            <div class="chat-output" id="chatOutput">
+                <!-- 示例欢迎消息 -->
+                <div class="bot-message">
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        {% if username %}
+                        您好，{{ username }}！我是智能聊天助手，请问有什么可以帮您的吗？
+                        {% else %}
+                        您好！我是智能聊天助手，请问有什么可以帮您的吗？
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 打字指示器 -->
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="请输入聊天内容">
+                <button id="sendButton">发送</button>
+            </div>
+
+            <!-- 学习计划按钮 -->
+            <div class="study-plan-container">
+                <a href="/studyPlan" class="study-plan-btn">
+                    <i class="fas fa-book"></i>
+                    制定我的学习计划
+                </a>
+            </div>
+        </div>
+
+        <!-- 右侧任务列表 -->
+        <div class="daily-tasks">
+            <div class="tasks-title">
+                <div>
+                    <i class="fas fa-tasks"></i>
+                    今日任务
+                </div>
+                <button id="addTaskButton" class="add-task-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div id="taskList" class="task-list">
+                <!-- 示例任务 -->
+                <div class="task-item">
+                    <input type="checkbox" id="task1">
+                    <label for="task1">完成数学作业</label>
+                </div>
+                <div class="task-item">
+                    <input type="checkbox" id="task2">
+                    <label for="task2">阅读30分钟</label>
+                </div>
+                <div class="task-item completed">
+                    <input type="checkbox" id="task3" checked>
+                    <label for="task3">晨跑20分钟</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 聊天功能
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const chatOutput = document.getElementById('chatOutput');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // 发送消息函数
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message) {
+                // 添加用户消息
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'user-message';
+                userMessageDiv.innerHTML = `
+                    <div class="message-content">${message}</div>
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+                chatOutput.appendChild(userMessageDiv);
+
+                // 清空输入框
+                chatInput.value = '';
+
+                // 滚动到底部
+                chatOutput.scrollTop = chatOutput.scrollHeight;
+
+                // 显示打字指示器
+                typingIndicator.style.display = 'flex';
+
+                // 模拟AI回复
+                setTimeout(() => {
+                    // 隐藏打字指示器
+                    typingIndicator.style.display = 'none';
+
+                    // 添加机器人回复
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'bot-message';
+                    botMessageDiv.innerHTML = `
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            我收到了您的消息："${message}"。目前这是一个演示界面，还不支持真实的AI对话功能。
+                        </div>
+                    `;
+                    chatOutput.appendChild(botMessageDiv);
+
+                    // 滚动到底部
+                    chatOutput.scrollTop = chatOutput.scrollHeight;
+                }, 1500);
+            }
+        }
+
+        // 点击发送按钮或按Enter键发送消息
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 任务项目点击事件
+        const taskItems = document.querySelectorAll('.task-item');
+        taskItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+        });
+
+        // 添加任务按钮（示例）
+        document.getElementById('addTaskButton').addEventListener('click', function() {
+            const taskList = document.getElementById('taskList');
+            const taskId = 'task' + (taskList.children.length + 1);
+
+            const taskItem = document.createElement('div');
+            taskItem.className = 'task-item';
+            taskItem.innerHTML = `
+                <input type="checkbox" id="${taskId}">
+                <label for="${taskId}">新任务</label>
+            `;
+
+            taskList.appendChild(taskItem);
+
+            // 为新添加的任务添加事件监听
+            const checkbox = taskItem.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    taskItem.classList.add('completed');
+                } else {
+                    taskItem.classList.remove('completed');
+                }
+            });
+        });
+
+        // 开启新对话
+        document.getElementById('newConversationButton').addEventListener('click', function() {
+            // 清空聊天记录
+            chatOutput.innerHTML = `
+                <div class="bot-message">
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        您好！我是智能聊天助手，请问有什么可以帮您的吗？
+                    </div>
+                </div>
+            `;
+        });
+    });
+</script>
+</body>
+</html>

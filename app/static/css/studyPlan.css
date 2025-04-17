@@ -1,0 +1,590 @@
+/* 基础样式重置 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+body {
+    background-color: #f7f9fc;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 60px auto 0;
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    gap: 20px;
+}
+
+.plan-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4a6fa5;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.section-header h2 {
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.add-button {
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+}
+
+.add-button:hover {
+    background-color: #5e97f6;
+}
+
+/* 返回按钮样式 */
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    z-index: 100;
+}
+
+.back-button:hover {
+    background-color: #5e97f6;
+}
+
+/* 状态过滤按钮样式 */
+.status-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.filter-completed:hover {
+    background-color: #c3e6cb;
+}
+
+.filter-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.filter-pending:hover {
+    background-color: #ffeeba;
+}
+
+/* 蛇形布局样式 */
+.snake-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    padding: 20px;
+    position: relative;
+}
+
+.timeline-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 30px;
+    position: relative;
+}
+
+/* 时间线项样式 */
+.timeline-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    min-height: 40px;
+}
+
+/* 时间线圆点样式 */
+.timeline-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: #4a6fa5;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}
+
+/* 连接线样式 */
+.timeline-connector {
+    position: absolute;
+    background-color: #4a6fa5;
+    z-index: 1;
+}
+
+.timeline-connector.horizontal {
+    height: 2px;
+    width: calc(100% + 30px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.timeline-connector.horizontal.right {
+    left: 50%;
+}
+
+.timeline-connector.horizontal.left {
+    right: 50%;
+}
+
+.timeline-connector.vertical {
+    width: 2px;
+    height: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(50% + 8px);
+}
+
+/* 调整奇数行和偶数行的连接线显示 */
+.timeline-row:nth-child(even) .timeline-item .timeline-connector.left {
+    display: none;
+}
+
+.timeline-row:nth-child(odd) .timeline-item .timeline-connector.right {
+    display: none;
+}
+
+/* 处理每行最后一个点的连接线 */
+.timeline-row:nth-child(even) .timeline-item:last-child .timeline-connector.right {
+    display: none;
+}
+
+.timeline-row:nth-child(odd) .timeline-item:first-child .timeline-connector.left {
+    display: none;
+}
+
+/* 垂直连接线调整 */
+.timeline-row:not(:last-child) .timeline-item:last-child .timeline-connector.vertical {
+    display: block;
+}
+
+.timeline-row:last-child .timeline-item .timeline-connector.vertical {
+    display: none;
+}
+
+/* 时间线内容样式 */
+.timeline-content {
+    position: absolute;
+    bottom: -25px;
+    text-align: center;
+    width: 100%;
+    z-index: 2;
+}
+
+.timeline-day {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 当前天数显示样式 */
+.current-day-display {
+    background-color: #4a6fa5;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* 左侧任务列表样式 */
+.my-plan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 任务状态列表样式 */
+.task-status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.task-group {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.task-group:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.task-group-title {
+    color: #333;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-group-title i {
+    font-size: 1rem;
+}
+
+.task-group-title .fa-clock {
+    color: #ffc107;
+}
+
+.task-group-title .fa-check-circle {
+    color: #28a745;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-item {
+    background: white;
+    border-radius: 5px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+#leftPendingList .task-item {
+    border-left-color: #ffc107;
+}
+
+#leftCompletedList .task-item {
+    border-left-color: #28a745;
+}
+
+.task-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.task-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-title {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* 状态标签样式 */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-in-progress {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+/* 任务弹出框样式 */
+.task-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 300px;
+    max-width: 400px;
+    display: none;
+}
+
+.task-popup.show {
+    display: block;
+}
+
+.task-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4a6fa5;
+}
+
+.task-popup-title {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.close-popup {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+}
+
+.close-popup:hover {
+    color: #dc3545;
+}
+
+.task-popup-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.popup-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.popup-task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.popup-task-item:hover {
+    background: #e9ecef;
+}
+
+.task-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.popup-task-text {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
+
+.popup-overlay.show {
+    display: block;
+}
+
+/* 添加计划按钮样式 */
+.add-plan-button {
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.add-plan-button:hover {
+    background-color: #5e97f6;
+    transform: translateY(-2px);
+}
+
+.add-plan-button i {
+    font-size: 0.9rem;
+}
+
+/* 计划项样式 */
+.my-plan-item {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-left: 4px solid #4a6fa5;
+}
+
+.my-plan-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.my-plan-title {
+    color: #333;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.my-plan-description {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* 进度条样式 */
+.my-plan-progress {
+    margin-top: 15px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.progress-percentage {
+    font-size: 0.85rem;
+    color: #4a6fa5;
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4a6fa5;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* 计划标签样式 */
+.plan-tags {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.plan-tag {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.plan-tag.status {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.plan-tag.category {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* 优化hover效果 */
+.timeline-item:hover .timeline-dot {
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-item:hover .timeline-connector {
+    opacity: 1;
+} 
