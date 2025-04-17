@@ -7,7 +7,7 @@
     <!-- 添加Font Awesome图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- 引用外部CSS文件 -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/chatbot.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', path='/css/chatbot.css') }}">
     <style>
         /* 基础样式 */
         * {
@@ -380,6 +380,19 @@
             color: #95a5a6;
             text-decoration: line-through;
         }
+
+        /* 用户信息显示 */
+        .user-info-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(74, 111, 165, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -391,12 +404,12 @@
             <i class="fas fa-user-circle"></i>
             {{ username }}
         </div>
-        <a href="/logout" class="logout-btn">
+        <a href="/auth/logout" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             退出
         </a>
         {% else %}
-        <a href="/login" class="login-btn" id="loginButton">
+        <a href="/auth/login" class="login-btn" id="loginButton">
             <i class="fas fa-sign-in-alt"></i>
             登录
         </a>
@@ -496,6 +509,13 @@
             </div>
         </div>
     </div>
+
+    <!-- 用户ID信息徽章（仅当登录时显示） -->
+    {% if user_id %}
+    <div class="user-info-badge">
+        用户ID: {{ user_id }}
+    </div>
+    {% endif %}
 </div>
 
 <script>
@@ -609,7 +629,11 @@
                         <i class="fas fa-robot"></i>
                     </div>
                     <div class="message-content">
+                        {% if username %}
+                        您好，{{ username }}！我是智能聊天助手，请问有什么可以帮您的吗？
+                        {% else %}
                         您好！我是智能聊天助手，请问有什么可以帮您的吗？
+                        {% endif %}
                     </div>
                 </div>
             `;

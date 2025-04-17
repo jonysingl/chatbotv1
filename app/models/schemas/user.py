@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, EmailStr, field_validator, ConfigDict, Va
 from pydantic.types import constr
 
 
+
 # 基础模型
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=32, examples=["john_doe"])
@@ -34,6 +35,23 @@ class UserOut(UserBase):
     last_login: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)  # 替代 orm_mode=True
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+    @field_validator('username')
+    def username_must_be_valid(cls, v):
+        if not v or len(v) < 1:
+            raise ValueError("请输入用户名")
+        return v
+
+    @field_validator('password')
+    def password_must_be_valid(cls, v):
+        if not v or len(v) < 1:
+            raise ValueError("请输入密码")
+        return v
 
 
 # 登录响应模型

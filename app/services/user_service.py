@@ -2,6 +2,7 @@ from passlib.context import CryptContext
 from app.models.orm.user import Users
 from app.models.schemas.user import UserCreate, UserOut
 from typing import Optional
+from app.models.schemas.user import UserLogin
 
 
 class UserService:
@@ -38,25 +39,27 @@ class UserService:
         return UserOut.model_validate(db_user)
 
     @classmethod
-    async def verify_user(cls, username: str, password: str):
-        """验证用户凭据（明文比对版本）"""
+    async def verify_user(cls, user_data: UserLogin):
+        """验证用户凭据并返回用户信息"""
         # 查找用户
-        user = await Users.get_or_none(username=username)
+        user = await Users.get_or_none(username=user_data.username)
 
         # 如果用户不存在
         if not user:
             raise ValueError("用户名或密码不正确")
 
-        # 密码验证（加密验证已注释）
-        # if not cls.pwd_context.verify(password, user.password):
-        if password != user.password:  # 直接比对明文密码
+        # 验证密码（加密验证逻辑已注释）
+        # if not cls.pwd_context.verify(user_data.password, user.password):
+        #     raise ValueError("用户名或密码不正确")
+
+        # 直接比较明文密码
+        if user_data.password != user.password:
             raise ValueError("用户名或密码不正确")
 
         # 返回用户信息（不包含密码）
         return {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email
+            "id": user.user_id,
+            "username": user.username
         }
 
     @classmethod
