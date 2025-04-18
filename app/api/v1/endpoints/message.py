@@ -27,7 +27,7 @@ class MessageResponse(BaseModel):
 logger = logging.getLogger(__name__)
 
 
-@message_router.post("/", response_model=MessageResponse)
+@message_router.post("/save_message", response_model=MessageResponse)
 async def create_message(request: CreateMessageRequest):
     """
     创建新消息

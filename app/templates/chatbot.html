@@ -7,7 +7,7 @@
     <!-- 添加Font Awesome图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- 引用外部CSS文件 -->
-   <link rel="stylesheet" href="{{ url_for('static', path='/css/chatbot.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/chatbot.css') }}">
     <style>
         /* 基础样式 */
         * {
@@ -540,8 +540,152 @@
 </div>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const chatInput = document.getElementById("chatInput");
+        const sendButton = document.getElementById("sendButton");
+        const chatOutput = document.getElementById("chatOutput");
+        const newConversationButton = document.getElementById("newConversationButton");
+        const conversationIdElement = document.querySelector(".conversation-id"); // 显示对话 ID 的元素
 
+        // 从页面加载用户 ID
+        const userId = parseInt(document.querySelector(".user-id").textContent.replace("ID: ", "")); // 假设用户 ID 格式为 "ID: 12"
+        let currentConversationId = localStorage.getItem("conversationId"); // 从 localStorage 初始化对话 ID
+        const messageHistory = []; // 历史消息记录
+
+        // 创建新对话的函数
+        async function createNewConversation(autoCreate = false) {
+            try {
+                const response = await fetch("/conversation/create_conversation", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        user_id: userId, // 动态获取用户 ID
+                        title: "", // 传空字符串，符合表单要求
+                        model_type: "gpt-3.5-turbo" // 指定模型类型
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorDetail = await response.json();
+                    throw new Error(`Error: ${errorDetail.detail}`);
+                }
+
+                const data = await response.json();
+                currentConversationId = data.conversation_id; // 存储新的对话 ID
+                messageHistory.length = 0; // 清空历史消息
+                chatOutput.innerHTML = ""; // 清空聊天窗口
+
+                // 更新对话 ID 的显示
+                conversationIdElement.textContent = `对话 ID: ${currentConversationId}`;
+                localStorage.setItem("conversationId", currentConversationId);
+
+                if (!autoCreate) {
+                    alert(`新对话已创建，ID: ${currentConversationId}`);
+                }
+            } catch (error) {
+                console.error("创建新对话失败:", error.message);
+                alert(`创建新对话失败: ${error.message}`);
+            }
+        }
+
+        // 自动创建新对话（如果不存在对话 ID）
+        if (!currentConversationId) {
+            createNewConversation(true); // 自动创建对话，区分手动和自动
+        } else {
+            // 如果已有对话 ID，更新显示
+            conversationIdElement.textContent = `对话 ID: ${currentConversationId}`;
+            console.log("已加载现有对话 ID:", currentConversationId);
+        }
+
+        // 点击“开启新对话”按钮
+        newConversationButton.addEventListener("click", function () {
+            createNewConversation();
+        });
+
+        // 添加消息到聊天窗口
+        function addMessage(role, content) {
+            // 创建消息容器
+            const messageDiv = document.createElement("div");
+            messageDiv.className = role === "user" ? "user-message" : "bot-message";
+
+            // 创建头像
+            const avatarDiv = document.createElement("div");
+            avatarDiv.className = "avatar";
+            avatarDiv.innerHTML = role === "user"
+                ? '<i class="fas fa-user"></i>'
+                : '<i class="fas fa-robot"></i>';
+
+            // 创建消息内容
+            const contentDiv = document.createElement("div");
+            contentDiv.className = "message-content";
+            contentDiv.textContent = content;
+
+            // 组装消息结构
+            if (role === "user") {
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(avatarDiv);
+            } else {
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
+            }
+
+            chatOutput.appendChild(messageDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight; // 自动滚动到底部
+        }
+
+        // 点击“发送”按钮的处理逻辑
+        sendButton.addEventListener("click", async function () {
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage("user", userMessage);
+            messageHistory.push({role: "user", content: userMessage});
+            chatInput.value = "";
+
+            try {
+                const typingIndicator = document.getElementById("typingIndicator");
+                typingIndicator.style.display = "flex";
+
+                const response = await fetch("/llm/query", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        query: userMessage,
+                        history: messageHistory,
+                        conversation_id: currentConversationId, // 发送当前对话 ID
+                        system_prompt: "你是一个有帮助的AI助手"
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const botMessage = data.response;
+                    addMessage("bot", botMessage);
+                    messageHistory.push({role: "assistant", content: botMessage});
+                } else {
+                    addMessage("bot", "抱歉，服务出现问题，请稍后再试。");
+                }
+            } catch (error) {
+                addMessage("bot", `抱歉，出现错误: ${error.message}`);
+            } finally {
+                const typingIndicator = document.getElementById("typingIndicator");
+                typingIndicator.style.display = "none";
+            }
+        });
+
+        // 按下回车键发送消息
+        chatInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                sendButton.click();
+                event.preventDefault();
+            }
+        });
+    });
 </script>
 
 </body>
-</html>
+</html> /* 基础样式重置 */
