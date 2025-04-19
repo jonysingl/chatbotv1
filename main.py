@@ -19,5 +19,6 @@ app.include_router(message_router, prefix= "/message", tags = ["消息模块"])
 
 app.include_router(llm_router, prefix="/llm", tags=["LLM模型模块"])
 
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8080, reload=True)

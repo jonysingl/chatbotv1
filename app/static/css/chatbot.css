@@ -189,3 +189,48 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
 }
+
+.conversation-item.active {
+    background-color: #4a6fa5;
+    color: white;
+}
+/* 删除对话，重命名对话*/
+.conversation-options {
+    position: relative;
+    display: inline-block;
+    margin-left: auto;
+}
+
+.options-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.options-menu {
+    position: absolute;
+    right: 0;
+    background-color: #34495e;
+    border: 1px solid #ecf0f1;
+    border-radius: 5px;
+    padding: 5px;
+    z-index: 10;
+}
+
+.options-menu button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 14px;
+    padding: 5px 10px;
+    cursor: pointer;
+    display: block;
+    text-align: left;
+    width: 100%;
+}
+
+.options-menu button:hover {
+    background-color: #3d566d;
+}

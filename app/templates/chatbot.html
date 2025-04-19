@@ -551,6 +551,11 @@
         const userId = parseInt(document.querySelector(".user-id").textContent.replace("ID: ", "")); // 假设用户 ID 格式为 "ID: 12"
         let currentConversationId = localStorage.getItem("conversationId"); // 从 localStorage 初始化对话 ID
         const messageHistory = []; // 历史消息记录
+        const messageCache = {}; // 缓存空间，用于存储用户消息和大模型回复
+
+        // 加载对话历史记录
+        loadConversationHistory();
+
 
         // 创建新对话的函数
         async function createNewConversation(autoCreate = false) {
@@ -602,6 +607,7 @@
         // 点击“开启新对话”按钮
         newConversationButton.addEventListener("click", function () {
             createNewConversation();
+            loadConversationHistory();
         });
 
         // 添加消息到聊天窗口
@@ -635,13 +641,211 @@
             chatOutput.scrollTop = chatOutput.scrollHeight; // 自动滚动到底部
         }
 
+        // 存储消息到数据库
+        async function storeMessageInDatabase(question, answer) {
+            try {
+                const response = await fetch("/message/save_message", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        conversation_id: currentConversationId,
+                        question: question,
+                        answer: answer,
+                        tokens_used: 15 // 固定为 15
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorDetail = await response.json();
+                    throw new Error(`Error: ${errorDetail.detail}`);
+                }
+
+                const data = await response.json();
+                console.log(`消息已存储，ID: ${data.message_id}, 状态: ${data.status}`);
+            } catch (error) {
+                console.error("存储消息到数据库失败:", error.message);
+            }
+        }
+
+        // 加载历史记录函数
+// 加载历史记录函数（修改）
+        async function loadConversationHistory() {
+            const conversationHistoryContainer = document.getElementById("conversationHistory");
+
+            try {
+                const response = await fetch(`/conversation/conversations?user_id=${userId}`, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("无法加载对话历史记录");
+                }
+
+                const historyData = await response.json();
+
+                // 清空历史记录容器
+                conversationHistoryContainer.innerHTML = `<div class="history-title">对话历史</div>`;
+
+                if (historyData.length === 0) {
+                    const noHistoryMessage = document.createElement("p");
+                    noHistoryMessage.className = "no-history";
+                    noHistoryMessage.textContent = "暂无对话历史";
+                    conversationHistoryContainer.appendChild(noHistoryMessage);
+                } else {
+                    historyData.forEach((conversation) => {
+                        const conversationItem = document.createElement("div");
+                        conversationItem.className = "conversation-item";
+                        if (conversation.conversation_id == currentConversationId) {
+                            conversationItem.classList.add("active");
+                        }
+
+                        // 添加对话标题和时间
+                        const conversationContent = document.createElement("div");
+                        conversationContent.innerHTML = `
+                    <div class="conv-title" contenteditable="false">${conversation.title}</div>
+                    <div class="conv-date">ID: ${conversation.conversation_id}</div>
+                `;
+                        conversationItem.appendChild(conversationContent);
+
+                        // 添加三个点按钮
+                        const optionsMenu = document.createElement("div");
+                        optionsMenu.className = "conversation-options";
+                        optionsMenu.innerHTML = `
+                    <button class="options-button">⋮</button>
+                    <div class="options-menu" style="display: none;">
+                        <button class="rename-button">重命名</button>
+                        <button class="delete-button">删除</button>
+                    </div>
+                `;
+                        conversationItem.appendChild(optionsMenu);
+
+                        // 绑定三个点按钮显示/隐藏菜单
+                        const optionsButton = optionsMenu.querySelector(".options-button");
+                        const menu = optionsMenu.querySelector(".options-menu");
+                        optionsButton.addEventListener("click", (event) => {
+                            event.stopPropagation();
+                            menu.style.display = menu.style.display === "none" ? "block" : "none";
+                        });
+
+                        // 点击重命名
+                        const renameButton = optionsMenu.querySelector(".rename-button");
+                        renameButton.addEventListener("click", (event) => {
+                            event.stopPropagation();
+                            const titleElement = conversationContent.querySelector(".conv-title");
+                            titleElement.contentEditable = "true";
+                            titleElement.focus();
+                            titleElement.addEventListener("blur", async () => {
+                                titleElement.contentEditable = "false";
+                                const newTitle = titleElement.textContent.trim();
+                                if (newTitle && newTitle !== conversation.title) {
+                                    try {
+                                        const renameResponse = await fetch(`/conversation/conversations/${conversation.conversation_id}/title`, {
+                                            method: "PATCH",
+                                            headers: {
+                                                "Content-Type": "application/json"
+                                            },
+                                            body: JSON.stringify({title: newTitle})
+                                        });
+                                        if (!renameResponse.ok) {
+                                            throw new Error("重命名失败");
+                                        }
+                                        const updated = await renameResponse.json();
+                                        console.log(`标题更新成功: ${updated.title}`);
+                                    } catch (error) {
+                                        console.error("重命名失败:", error.message);
+                                        alert("重命名失败，请重试！");
+                                        titleElement.textContent = conversation.title; // 恢复旧标题
+                                    }
+                                }
+                            });
+                        });
+
+                        // 点击删除
+                        const deleteButton = optionsMenu.querySelector(".delete-button");
+                        deleteButton.addEventListener("click", async (event) => {
+                            event.stopPropagation();
+                            if (confirm("确认删除该对话及其所有消息？")) {
+                                try {
+                                    const deleteResponse = await fetch(`/conversation/conversations/${conversation.conversation_id}`, {
+                                        method: "DELETE"
+                                    });
+                                    if (!deleteResponse.ok) {
+                                        throw new Error("删除失败");
+                                    }
+                                    console.log(`对话删除成功: ${conversation.conversation_id}`);
+                                    // 刷新对话历史
+                                    loadConversationHistory();
+                                } catch (error) {
+                                    console.error("删除对话失败:", error.message);
+                                    alert("删除失败，请重试！");
+                                }
+                            }
+                        });
+
+                        // 绑定点击切换对话事件
+                        conversationItem.addEventListener("click", async () => {
+                            currentConversationId = conversation.conversation_id;
+                            localStorage.setItem("conversationId", currentConversationId);
+                            loadConversationHistory(); // 刷新历史记录列表
+                            chatOutput.innerHTML = ""; // 清空聊天窗口
+                            conversationIdElement.textContent = `对话 ID: ${currentConversationId}`;
+
+                            await loadConversationMessages(currentConversationId)
+                        });
+
+                        conversationHistoryContainer.appendChild(conversationItem);
+                    });
+                }
+            } catch (error) {
+                console.error("加载历史记录失败:", error.message);
+                const errorMessage = document.createElement("p");
+                errorMessage.className = "error-message";
+                errorMessage.textContent = "加载对话历史失败，请稍后重试。";
+                conversationHistoryContainer.appendChild(errorMessage);
+            }
+        }
+
+        async function loadConversationMessages(conversationId) {
+            try {
+                const response = await fetch(`/message/get_messages/${conversationId}`, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("无法加载历史消息");
+                }
+
+                const messages = await response.json();
+
+                // 遍历历史消息并添加到聊天窗口
+                messages.forEach((message) => {
+                    addMessage("user", message.question); // 添加用户消息
+                    addMessage("bot", message.answer);   // 添加机器人回复
+                });
+
+                console.log(`加载了 ${messages.length} 条历史消息`);
+            } catch (error) {
+                console.error("加载历史消息失败:", error.message);
+                alert("加载历史消息失败，请稍后再试！");
+            }
+        }
+
         // 点击“发送”按钮的处理逻辑
         sendButton.addEventListener("click", async function () {
             const userMessage = chatInput.value.trim();
             if (!userMessage) return;
 
+            // 添加用户消息到聊天窗口
             addMessage("user", userMessage);
-            messageHistory.push({role: "user", content: userMessage});
+            messageCache.question = userMessage; // 缓存用户问题
             chatInput.value = "";
 
             try {
@@ -664,7 +868,20 @@
                 if (response.ok) {
                     const data = await response.json();
                     const botMessage = data.response;
+
+                    // 添加大模型回复到聊天窗口
                     addMessage("bot", botMessage);
+                    messageCache.answer = botMessage; // 缓存大模型回复
+
+                    // 将消息存入数据库
+                    await storeMessageInDatabase(messageCache.question, messageCache.answer);
+
+                    // 清空缓存
+                    messageCache.question = null;
+                    messageCache.answer = null;
+
+                    // 更新历史消息
+                    messageHistory.push({role: "user", content: userMessage});
                     messageHistory.push({role: "assistant", content: botMessage});
                 } else {
                     addMessage("bot", "抱歉，服务出现问题，请稍后再试。");
@@ -685,6 +902,8 @@
             }
         });
     });
+
+
 </script>
 
 </body>
