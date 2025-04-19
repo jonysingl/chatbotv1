@@ -20,11 +20,15 @@
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background-color: #f5f7fa;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         .container {
             display: flex;
-            min-height: 100vh;
+            flex: 1;
+            position: relative;
         }
 
         /* 用户区域样式 */
@@ -93,6 +97,7 @@
             height: 100vh;
             position: fixed;
             overflow-y: auto;
+            z-index: 10;
         }
 
         #newConversationButton {
@@ -118,7 +123,12 @@
             border-bottom: 1px solid #34495e;
         }
 
+        /* 修改后的对话历史项样式 */
         .conversation-item {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px;
             margin-bottom: 10px;
             background-color: #34495e;
@@ -135,6 +145,12 @@
             background-color: #4a6fa5;
         }
 
+        /* 对话内容容器，确保有足够的空间 */
+        .conversation-item > div:first-child {
+            flex: 1;
+            overflow: hidden;
+        }
+
         .conv-title {
             font-size: 14px;
             margin-bottom: 5px;
@@ -143,6 +159,68 @@
         .conv-date {
             font-size: 12px;
             color: #bdc3c7;
+        }
+
+        /* 选项按钮固定到右侧 */
+        .conversation-options {
+            position: relative;
+            margin-left: 8px;
+        }
+
+        /* 选项按钮样式 */
+        .options-button {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        .options-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 选项菜单样式 - 绝对定位悬浮在右侧 */
+        .options-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: #2c3e50;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            width: 100px;
+            z-index: 100;
+            /* 默认隐藏，点击按钮时显示 */
+            display: none;
+        }
+
+        /* 选项菜单内按钮样式 */
+        .options-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 8px 10px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            display: block;
+        }
+
+        /* 选项按钮悬停效果 */
+        .options-menu button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 删除按钮红色样式 */
+        .delete-button {
+            color: #e74c3c !important;
+        }
+
+        .delete-button:hover {
+            background-color: rgba(231, 76, 60, 0.2) !important;
         }
 
         .no-history, .please-login, .error-message {
@@ -154,42 +232,60 @@
 
         /* 主内容区域 */
         .content {
+            display: flex;
+            flex-direction: column;
             flex: 1;
             margin-left: 250px;
-            padding: 20px;
-            padding-top: 70px;
+            min-height: 100vh;
+            position: relative;
         }
 
-        .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
+        /* 聊天头部 - 调整至页面顶部并居中 */
         .chat-header {
-            padding: 20px;
+            position: fixed;
+            top: 0;
             background-color: #4a6fa5;
             color: white;
             text-align: center;
-        }
-
-        .chat-header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
+            padding: 20px;
+            z-index: 20;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 800px;
         }
 
         .chat-header p {
-            font-size: 14px;
+            font-size: 10px;
             opacity: 0.8;
         }
 
+        /* 聊天容器 - 整体布局调整 */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            width: 800px;
+            margin-top: 60px; /* 给聊天头部留出空间 */
+            flex: 1;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 120px); /* 占据剩余视口高度 */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* 确保内容分布在容器两端 */
+        }
+
+        /* 聊天输出区域 - 拉长 */
         .chat-output {
-            height: 500px;
+            flex: 1;
             padding: 20px;
             overflow-y: auto;
+            background-color: #fff;
+            width: 100%;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            margin-bottom: 60px; /* 输入框和学习计划按钮的高度 */
         }
 
         .user-message, .bot-message {
@@ -268,10 +364,55 @@
             }
         }
 
+        /* 输入区域和学习计划容器的布局修改 */
+        .input-study-container {
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #ecf0f1;
+            background-color: white;
+            position: sticky;
+            bottom: 0;
+            z-index: 5; /* 确保不会遮挡内容 */
+        }
+
+        /* 学习计划按钮 - 移至第一行并减小间距 */
+        .study-plan-container {
+            text-align: left;
+            padding: 2px;
+            background-color: white;
+            margin-bottom: 0; /* 移除底部间距 */
+        }
+
+        .study-plan-btn {
+            display: inline-flex;
+            align-items: center; /* 垂直居中 */
+            justify-content: flex-start; /* 内容靠左对齐 */
+            gap: 0;
+            padding: 4px 10px;
+            background-color: #27ae60;
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 10px;
+            transition: background-color 0.3s;
+
+            /* 让按钮移动到容器的最左边 */
+            margin-left: 0;
+            position: relative; /* 确保可以调整位置 */
+            left: 16px; /* 确保按钮靠容器左边 */
+        }
+
+        .study-plan-btn {
+            background-color: #2ecc71;
+            color: black; /* 字体颜色为黑色 */
+        }
+
+        /* 输入框区域 - 移至第二行并减小与上方间距 */
         .chat-input {
             display: flex;
-            padding: 15px;
-            border-top: 1px solid #ecf0f1;
+            padding: 8px 16px; /* 减小内边距 */
+            background-color: white;
+            margin-top: 2px; /* 设置与学习计划按钮的间距为2px */
         }
 
         .chat-input input {
@@ -295,29 +436,6 @@
 
         .chat-input button:hover {
             background-color: #5e97f6;
-        }
-
-        .study-plan-container {
-            text-align: center;
-            padding: 15px;
-            border-top: 1px solid #ecf0f1;
-        }
-
-        .study-plan-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background-color: #27ae60;
-            color: white;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-
-        .study-plan-btn:hover {
-            background-color: #2ecc71;
         }
 
         /* 系统消息样式 */
@@ -350,12 +468,13 @@
         .daily-tasks {
             position: fixed;
             right: 20px;
-            top: 70px;
+            top: 90px; /* 调整，避免与头部重叠 */
             width: 250px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 15px;
+            z-index: 5;
         }
 
         .tasks-title {
@@ -465,8 +584,7 @@
         <div class="chat-container">
             <!-- 聊天头部 -->
             <div class="chat-header">
-                <h1>智能聊天助手</h1>
-                <p>随时为您解答问题</p>
+                <p>智能聊天助手</p>
                 <p class="conversation-id">对话 ID: {{ conversation_id }}</p> <!-- 显示对话ID -->
             </div>
 
@@ -494,18 +612,21 @@
                 <span></span>
             </div>
 
-            <!-- 输入区域 -->
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="请输入聊天内容">
-                <button id="sendButton">发送</button>
-            </div>
+            <!-- 将输入框和学习计划按钮包装在同一个容器中 -->
+            <div class="input-study-container">
+                <!-- 学习计划按钮 - 第一行 -->
+                <div class="study-plan-container">
+                    <a href="/studyPlan" class="study-plan-btn">
+                        <i class="fas fa-book"></i>
+                        制定我的学习计划
+                    </a>
+                </div>
 
-            <!-- 学习计划按钮 -->
-            <div class="study-plan-container">
-                <a href="/studyPlan" class="study-plan-btn">
-                    <i class="fas fa-book"></i>
-                    制定我的学习计划
-                </a>
+                <!-- 输入区域 - 第二行 -->
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="请输入聊天内容">
+                    <button id="sendButton">发送</button>
+                </div>
             </div>
         </div>
 
@@ -556,7 +677,6 @@
         // 加载对话历史记录
         loadConversationHistory();
 
-
         // 创建新对话的函数
         async function createNewConversation(autoCreate = false) {
             try {
@@ -604,7 +724,7 @@
             console.log("已加载现有对话 ID:", currentConversationId);
         }
 
-        // 点击“开启新对话”按钮
+        // 点击"开启新对话"按钮
         newConversationButton.addEventListener("click", function () {
             createNewConversation();
             loadConversationHistory();
@@ -669,8 +789,7 @@
             }
         }
 
-        // 加载历史记录函数
-// 加载历史记录函数（修改）
+        // 加载对话历史记录函数
         async function loadConversationHistory() {
             const conversationHistoryContainer = document.getElementById("conversationHistory");
 
@@ -707,24 +826,24 @@
                         // 添加对话标题和时间
                         const conversationContent = document.createElement("div");
                         conversationContent.innerHTML = `
-                    <div class="conv-title" contenteditable="false">${conversation.title}</div>
-                    <div class="conv-date">ID: ${conversation.conversation_id}</div>
-                `;
+                        <div class="conv-title" contenteditable="false">${conversation.title}</div>
+                        <div class="conv-date">ID: ${conversation.conversation_id}</div>
+                    `;
                         conversationItem.appendChild(conversationContent);
 
-                        // 添加三个点按钮
+                        // 添加选项按钮和下拉菜单
                         const optionsMenu = document.createElement("div");
                         optionsMenu.className = "conversation-options";
                         optionsMenu.innerHTML = `
-                    <button class="options-button">⋮</button>
-                    <div class="options-menu" style="display: none;">
-                        <button class="rename-button">重命名</button>
-                        <button class="delete-button">删除</button>
-                    </div>
-                `;
+                        <button class="options-button">⋮</button>
+                        <div class="options-menu">
+                            <button class="rename-button">重命名</button>
+                            <button class="delete-button">删除</button>
+                        </div>
+                    `;
                         conversationItem.appendChild(optionsMenu);
 
-                        // 绑定三个点按钮显示/隐藏菜单
+                        // 绑定选项按钮点击事件
                         const optionsButton = optionsMenu.querySelector(".options-button");
                         const menu = optionsMenu.querySelector(".options-menu");
                         optionsButton.addEventListener("click", (event) => {
@@ -800,6 +919,12 @@
 
                         conversationHistoryContainer.appendChild(conversationItem);
                     });
+
+                    // 点击文档其他地方关闭所有菜单
+                    document.addEventListener("click", () => {
+                        const allMenus = document.querySelectorAll(".options-menu");
+                        allMenus.forEach(menu => menu.style.display = "none");
+                    });
                 }
             } catch (error) {
                 console.error("加载历史记录失败:", error.message);
@@ -838,7 +963,7 @@
             }
         }
 
-        // 点击“发送”按钮的处理逻辑
+        // 点击"发送"按钮的处理逻辑
         sendButton.addEventListener("click", async function () {
             const userMessage = chatInput.value.trim();
             if (!userMessage) return;
